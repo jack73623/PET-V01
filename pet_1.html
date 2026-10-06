@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PET單字特訓-1</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Nunito & Fredoka -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --duo-green: #58cc02;
+            --duo-green-dark: #46a302;
+            --duo-blue: #1cb0f6;
+            --duo-blue-dark: #1899d6;
+            --duo-purple: #af66ff;
+            --duo-purple-dark: #903cee;
+            --duo-yellow: #ffc800;
+            --duo-yellow-dark: #e5a400;
+            --duo-red: #ff4b4b;
+            --duo-red-dark: #d33131;
+            --duo-gray: #e5e5e5;
+            --duo-gray-dark: #cfcfcf;
+        }
+
+        body {
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .font-fredoka {
+            font-family: 'Fredoka', cursive, sans-serif;
+        }
+
+        /* Duolingo 3D Button Utility */
+        .btn-duo {
+            position: relative;
+            transition: all 0.08s ease-in-out;
+            border-bottom-style: solid;
+        }
+        .btn-duo:active:not(:disabled) {
+            transform: translateY(4px);
+            border-bottom-width: 0px !important;
+            margin-bottom: 4px;
+        }
+        .btn-duo:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-green {
+            background-color: var(--duo-green);
+            border-bottom-width: 4px;
+            border-bottom-color: var(--duo-green-dark);
+            color: #ffffff;
+        }
+        .btn-blue {
+            background-color: var(--duo-blue);
+            border-bottom-width: 4px;
+            border-bottom-color: var(--duo-blue-dark);
+            color: #ffffff;
+        }
+        .btn-purple {
+            background-color: var(--duo-purple);
+            border-bottom-width: 4px;
+            border-bottom-color: var(--duo-purple-dark);
+            color: #ffffff;
+        }
+        .btn-white {
+            background-color: #ffffff;
+            border: 2px solid var(--duo-gray);
+            border-bottom-width: 4px;
+            border-bottom-color: var(--duo-gray-dark);
+            color: #4b4b4b;
+        }
+        .btn-white.selected {
+            background-color: #ddf4ff;
+            border-color: #84d8ff;
+            border-bottom-color: var(--duo-blue);
+            color: var(--duo-blue-dark);
+        }
+
+        /* Sentence Reordering Chips */
+        .word-bubble {
+            background-color: white;
+            border: 2px solid var(--duo-gray);
+            border-bottom-width: 4px;
+            border-bottom-color: var(--duo-gray-dark);
+            border-radius: 1rem;
+            padding: 0.55rem 1rem;
+            font-weight: 800;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: all 0.12s ease;
+        }
+        .word-bubble:hover {
+            background-color: #f7f7f7;
+        }
+        .word-bubble:active {
+            transform: translateY(3px);
+            border-bottom-width: 1px;
+        }
+
+        /* Letter slots for Listen & Spell */
+        .letter-slot {
+            width: 2.35rem;
+            height: 3.1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            border-radius: 0.75rem;
+            border: 2px solid var(--duo-gray);
+            border-bottom-width: 4px;
+            border-bottom-color: var(--duo-gray-dark);
+            background-color: #ffffff;
+            color: #2b2b2b;
+            transition: all 0.15s ease;
+        }
+        .letter-slot.filled {
+            border-color: #84d8ff;
+            border-bottom-color: var(--duo-blue);
+            background-color: #eaf7ff;
+            color: var(--duo-blue-dark);
+        }
+        .letter-slot.active-cursor {
+            border-color: var(--duo-blue);
+            border-bottom-color: var(--duo-blue-dark);
+            box-shadow: 0 0 0 3px rgba(28, 176, 246, 0.25);
+            animation: pulse-border 1.2s infinite ease-in-out;
+        }
+        @keyframes pulse-border {
+            0%, 100% { border-color: var(--duo-blue); }
+            50% { border-color: #9fe2ff; }
+        }
+
+        /* Microphone Pulse Animation */
+        @keyframes duo-pulse {
+            0% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(28, 176, 246, 0.7); }
+            70% { transform: scale(1.06); box-shadow: 0 0 0 16px rgba(28, 176, 246, 0); }
+            100% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(28, 176, 246, 0); }
+        }
+        .mic-active {
+            animation: duo-pulse 1.4s infinite cubic-bezier(0.4, 0, 0.6, 1);
+            background-color: #1cb0f6 !important;
+            border-color: #1899d6 !important;
+            color: white !important;
+        }
+
+        @keyframes gentle-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .mascot-bounce {
+            animation: gentle-bounce 2.6s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-[#f7f9fa] min-h-screen flex flex-col justify-between text-gray-800">
+
+    <!-- Top Navigation Header -->
+    <header class="w-full bg-white border-b-2 border-gray-200 sticky top-0 z-30 px-4 py-3">
+        <div class="max-w-2xl mx-auto flex items-center justify-between gap-4">
+            <!-- App Logo / Title -->
+            <div class="flex items-center gap-2">
+                <span class="text-2xl">🦉</span>
+                <span class="font-fredoka font-bold text-lg text-green-600 hidden sm:inline">PET單字特訓-1</span>
+            </div>
+
+            <!-- Progress Indicator -->
+            <div class="flex-1 flex flex-col gap-1">
+                <div class="flex justify-between items-center text-xs font-black text-gray-500">
+                    <span id="progress-indicator" class="font-fredoka uppercase tracking-wider text-green-600">單字 1 / 10</span>
+                    <span id="stage-badge" class="bg-green-100 text-green-700 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold">📖 第一階段：學習</span>
+                </div>
+                <div class="w-full bg-gray-200 h-3.5 rounded-full overflow-hidden relative shadow-inner">
+                    <div id="progress-bar-fill" class="bg-[#58cc02] h-full rounded-full transition-all duration-300 relative w-[10%]">
+                        <div class="absolute top-0.5 left-2 right-2 h-1 bg-white opacity-40 rounded-full"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats: Hearts & XP -->
+            <div class="flex items-center gap-2.5 font-fredoka font-bold">
+                <div class="flex items-center text-rose-500 gap-1 bg-rose-50 px-2.5 py-1 rounded-xl border border-rose-200 shadow-sm">
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                    <span id="hearts-count" class="text-sm font-black">5</span>
+                </div>
+                <div class="flex items-center text-amber-500 gap-1 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200 shadow-sm">
+                    <span class="text-base">⚡</span>
+                    <span id="xp-count" class="text-sm font-black">0 XP</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-1 flex flex-col justify-center items-center px-4 py-6 max-w-2xl w-full mx-auto overflow-y-auto">
+        <div id="main-content-card" class="w-full">
+            <!-- Rendered Stage Content -->
+        </div>
+    </main>
+
+    <!-- Bottom Action Footer -->
+    <footer id="footer-section" class="w-full bg-white border-t-2 border-gray-200 transition-colors duration-200 p-4 sticky bottom-0 z-20">
+        <div class="max-w-2xl mx-auto flex flex-col gap-3">
+            <!-- Bottom Feedback Banner -->
+            <div id="feedback-banner" class="hidden flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div id="feedback-icon" class="w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl text-white flex-shrink-0">
+                        ✓
+                    </div>
+                    <div>
+                        <h4 id="feedback-title" class="font-fredoka text-xl font-bold">太厲害了！</h4>
+                        <p id="feedback-desc" class="text-sm font-semibold opacity-90"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Action Controls -->
+            <div class="flex items-center justify-between gap-3">
+                <button id="view-card-btn" class="btn-duo btn-purple rounded-2xl font-black py-3.5 px-4 text-sm tracking-wider flex items-center gap-1.5 hidden shadow-sm whitespace-nowrap">
+                    <span>📖 查看單字學習卡</span>
+                </button>
+                <button id="main-action-btn" class="btn-duo btn-green rounded-2xl font-black text-base tracking-wider uppercase py-3.5 px-8 w-full transition-all">
+                    繼續 (Continue)
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Stage 1 Vocabulary Card Modal Popup (Accessible during challenges) -->
+    <div id="vocab-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto border-4 border-purple-200 shadow-2xl flex flex-col gap-4">
+            <div class="flex items-center justify-between border-b pb-2">
+                <span class="text-xs font-black text-purple-600 bg-purple-100 px-3 py-1 rounded-full uppercase tracking-wider">單字複習卡</span>
+                <span class="text-xs text-gray-400 font-bold">隨時複習 · 不扣分數</span>
+            </div>
+
+            <div id="modal-card-content" class="flex flex-col items-center gap-3 text-center">
+                <!-- Dynamically filled with stage 1 word card -->
+            </div>
+
+            <button id="close-vocab-modal-btn" class="btn-duo btn-purple rounded-2xl w-full py-3.5 font-black text-white uppercase text-base flex items-center justify-center gap-2 mt-2">
+                <span>🔙 返回繼續挑戰</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Energy Depleted Custom Modal -->
+    <div id="energy-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center border-4 border-gray-200 shadow-2xl flex flex-col items-center gap-4">
+            <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center text-3xl">💔</div>
+            <h3 class="text-2xl font-fredoka font-bold text-gray-800">愛心已用完！</h3>
+            <p class="text-gray-600 text-sm font-semibold">不用灰心，點選下方按鈕即可回滿 5 顆愛心繼續挑戰！</p>
+            <button id="refill-hearts-btn" class="btn-duo btn-green rounded-2xl w-full py-3.5 font-black text-white uppercase text-base">恢復愛心重試</button>
+        </div>
+    </div>
+
+    <script>
+        /* 10 Cambridge PET Words Dataset */
+        const VOCAB_DATA = [
+            {
+                id: 1,
+                word: "cinema",
+                pos: "n.",
+                ipa: "/ˈsɪn.ə.mə/",
+                def: "電影院",
+                sentence1: "Shall we meet outside the cinema at seven o'clock?",
+                sentence1Zh: "我們七點在電影院門口碰面好嗎？",
+                sentence2: "The town has a modern cinema with eight big screens.",
+                sentence2Zh: "這座城鎮擁有一間配備八個大銀幕的現代化電影院。"
+            },
+            {
+                id: 2,
+                word: "refreshment",
+                pos: "n.",
+                ipa: "/rɪˈfreʃ.mənt/",
+                def: "茶點、點心飲料",
+                sentence1: "Light refreshments will be served during the conference break.",
+                sentence1Zh: "會議休息期間將會提供清淡的茶點與飲品。",
+                sentence2: "There is a small stall selling hot drinks and refreshments near the park.",
+                sentence2Zh: "公園附近有一家販售熱飲和點心的小攤位。"
+            },
+            {
+                id: 3,
+                word: "permit",
+                pos: "v. / n.",
+                ipa: "/pəˈmɪt/",
+                def: "允許、許可；許可證",
+                sentence1: "Photography is not permitted inside the art museum.",
+                sentence1Zh: "美術館內部禁止進行拍照攝影。",
+                sentence2: "You need a special parking permit to leave your car here.",
+                sentence2Zh: "你需要持有專用停車許可證才能把車停放在這裡。"
+            },
+            {
+                id: 4,
+                word: "journey",
+                pos: "n.",
+                ipa: "/ˈdʒɜː.ni/",
+                def: "旅程、旅行",
+                sentence1: "Have a safe journey and send us a message when you arrive.",
+                sentence1Zh: "祝你旅途平安，抵達後記得給我們發個訊息。",
+                sentence2: "The train journey through the Swiss mountains took four hours.",
+                sentence2Zh: "穿越瑞士山區的火車旅程總共花了四個小時。"
+            },
+            {
+                id: 5,
+                word: "accept",
+                pos: "v.",
+                ipa: "/əkˈsept/",
+                def: "接受、答應",
+                sentence1: "I am delighted to accept your kind invitation to dinner.",
+                sentence1Zh: "我非常高興能接受您熱情的晚餐邀請。",
+                sentence2: "Does this shop accept international credit cards for payment?",
+                sentence2Zh: "這家商店接受使用國際信用卡付款嗎？"
+            },
+            {
+                id: 6,
+                word: "provide",
+                pos: "v.",
+                ipa: "/prəˈvaɪd/",
+                def: "提供、供應",
+                sentence1: "The hotel will provide free Wi-Fi and breakfast for guests.",
+                sentence1Zh: "飯店將為房客提供免費無線網路與早餐。",
+                sentence2: "This booklet provides useful information about tourist attractions.",
+                sentence2Zh: "這本小手冊提供了許多關於觀光景點的實用資訊。"
+            },
+            {
+                id: 7,
+                word: "passenger",
+                pos: "n.",
+                ipa: "/ˈpæs.ɪn.dʒər/",
+                def: "乘客、旅客",
+                sentence1: "All passengers must remain seated until the plane stops completely.",
+                sentence1Zh: "所有乘客在飛機完全停穩之前必須保持坐在座位上。",
+                sentence2: "The bus driver reminded the passenger to keep hold of the handrail.",
+                sentence2Zh: "公車司機提醒乘客要抓緊扶手。"
+            },
+            {
+                id: 8,
+                word: "directly",
+                pos: "adv.",
+                ipa: "/daɪˈrekt.li/",
+                def: "直接地、徑直地",
+                sentence1: "This express train goes directly to London without any stops.",
+                sentence1Zh: "這班直達特快車中途不停靠，直接開往倫敦。",
+                sentence2: "If you have any questions, please speak directly to the manager.",
+                sentence2Zh: "如果你有任何疑問，請直接向經理反映。"
+            },
+            {
+                id: 9,
+                word: "calculator",
+                pos: "n.",
+                ipa: "/ˈkæl.kjə.leɪ.tər/",
+                def: "計算機",
+                sentence1: "Students are allowed to use a calculator during the maths exam.",
+                sentence1Zh: "學生在數學考試中獲准使用計算機。",
+                sentence2: "I used the calculator on my mobile phone to split the restaurant bill.",
+                sentence2Zh: "我用手機上的計算機來平分餐廳的帳單。"
+            },
+            {
+                id: 10,
+                word: "spare",
+                pos: "adj. / v.",
+                ipa: "/speər/",
+                def: "備用的；空閒的；騰出",
+                sentence1: "Always keep a spare tire and a flashlight in the boot of your car.",
+                sentence1Zh: "汽車後車廂裡務必隨時備有一顆備胎與手電筒。",
+                sentence2: "What do you like to do in your spare time at weekends?",
+                sentence2Zh: "你週末空閒時喜歡做些什麼活動？"
+            }
+        ];
+
+        /* 20 Mixed Practice Challenges (2x = 20 total questions) */
+        const CHALLENGES_DATA = [
+            // Q1: cinema - spelling
+            {
+                vocabId: 1,
+                type: "spelling",
+                target: "cinema",
+                hintZh: "電影院",
+                prompt: "聽音拼出單字"
+            },
+            // Q2: refreshment - fill
+            {
+                vocabId: 2,
+                type: "fill",
+                question: "Light ________ will be served during the conference break.",
+                options: ["refreshments", "calculators", "passengers", "journeys"],
+                target: "refreshments",
+                translationZh: "會議休息期間將會提供清淡的茶點與飲品。"
+            },
+            // Q3: permit - reorder
+            {
+                vocabId: 3,
+                type: "reorder",
+                chips: ["Photography", "is", "not", "permitted", "inside", "the", "museum."],
+                target: "Photography is not permitted inside the museum.",
+                translationZh: "美術館內部禁止進行拍照攝影。"
+            },
+            // Q4: journey - speak
+            {
+                vocabId: 4,
+                type: "speak",
+                target: "Have a safe journey",
+                matchKeyword: "journey",
+                translationZh: "祝你旅途平安"
+            },
+            // Q5: accept - spelling
+            {
+                vocabId: 5,
+                type: "spelling",
+                target: "accept",
+                hintZh: "接受、答應",
+                prompt: "聽音拼出單字"
+            },
+            // Q6: provide - fill
+            {
+                vocabId: 6,
+                type: "fill",
+                question: "The hotel will ________ free Wi-Fi and breakfast for guests.",
+                options: ["provide", "permit", "spare", "accept"],
+                target: "provide",
+                translationZh: "飯店將為房客提供免費無線網路與早餐。"
+            },
+            // Q7: passenger - reorder
+            {
+                vocabId: 7,
+                type: "reorder",
+                chips: ["All", "passengers", "must", "remain", "seated", "before", "takeoff."],
+                target: "All passengers must remain seated before takeoff.",
+                translationZh: "所有乘客在起飛前必須保持坐在座位上。"
+            },
+            // Q8: directly - speak
+            {
+                vocabId: 8,
+                type: "speak",
+                target: "speak directly to the manager",
+                matchKeyword: "directly",
+                translationZh: "直接向經理反映"
+            },
+            // Q9: calculator - spelling
+            {
+                vocabId: 9,
+                type: "spelling",
+                target: "calculator",
+                hintZh: "計算機",
+                prompt: "聽音拼出單字"
+            },
+            // Q10: spare - fill
+            {
+                vocabId: 10,
+                type: "fill",
+                question: "What do you like to do in your ________ time on weekends?",
+                options: ["spare", "direct", "refreshing", "permitted"],
+                target: "spare",
+                translationZh: "你週末空閒時喜歡做些什麼活動？"
+            },
+            // Q11: cinema - reorder
+            {
+                vocabId: 1,
+                type: "reorder",
+                chips: ["Shall", "we", "meet", "outside", "the", "cinema", "at", "seven?"],
+                target: "Shall we meet outside the cinema at seven?",
+                translationZh: "我們七點在電影院門口碰面好嗎？"
+            },
+            // Q12: refreshment - spelling
+            {
+                vocabId: 2,
+                type: "spelling",
+                target: "refreshment",
+                hintZh: "茶點、點心飲料",
+                prompt: "聽音拼出單字"
+            },
+            // Q13: permit - speak
+            {
+                vocabId: 3,
+                type: "speak",
+                target: "a special parking permit",
+                matchKeyword: "permit",
+                translationZh: "專用停車許可證"
+            },
+            // Q14: journey - fill
+            {
+                vocabId: 4,
+                type: "fill",
+                question: "The train ________ through the mountains took four hours.",
+                options: ["journey", "cinema", "calculator", "permit"],
+                target: "journey",
+                translationZh: "穿越山區的火車旅程總共花了四個小時。"
+            },
+            // Q15: accept - reorder
+            {
+                vocabId: 5,
+                type: "reorder",
+                chips: ["Does", "this", "shop", "accept", "credit", "cards?"],
+                target: "Does this shop accept credit cards?",
+                translationZh: "這家商店接受使用信用卡付款嗎？"
+            },
+            // Q16: provide - speak
+            {
+                vocabId: 6,
+                type: "speak",
+                target: "provide useful information",
+                matchKeyword: "provide",
+                translationZh: "提供實用資訊"
+            },
+            // Q17: passenger - spelling
+            {
+                vocabId: 7,
+                type: "spelling",
+                target: "passenger",
+                hintZh: "乘客、旅客",
+                prompt: "聽音拼出單字"
+            },
+            // Q18: directly - fill
+            {
+                vocabId: 8,
+                type: "fill",
+                question: "This express train travels ________ to London without stopping.",
+                options: ["directly", "freely", "sparingly", "quietly"],
+                target: "directly",
+                translationZh: "這班直達特快車不停靠，直接開往倫敦。"
+            },
+            // Q19: calculator - reorder
+            {
+                vocabId: 9,
+                type: "reorder",
+                chips: ["Students", "can", "use", "a", "calculator", "during", "exams."],
+                target: "Students can use a calculator during exams.",
+                translationZh: "學生可以在考試期間使用計算機。"
+            },
+            // Q20: spare - speak
+            {
+                vocabId: 10,
+                type: "speak",
+                target: "a spare tire and a flashlight",
+                matchKeyword: "spare",
+                translationZh: "一顆備胎與手電筒"
+            }
+        ];
+    </script>
+
+    <script>
+        /* Web Audio Sound Synthesizer */
+        class DuoSoundEngine {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        this.ctx = new AudioContext();
+                    }
+                }
+            }
+            playTone(freq, type = 'sine', duration = 0.15, delay = 0, gainVal = 0.15) {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + delay);
+                    gain.gain.setValueAtTime(gainVal, this.ctx.currentTime + delay);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + delay + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + delay);
+                    osc.stop(this.ctx.currentTime + delay + duration);
+                } catch(e) {
+                    console.warn(e);
+                }
+            }
+            correct() {
+                // Duolingo celebratory dual chime (C6 -> G6)
+                this.playTone(1046.5, 'triangle', 0.14, 0, 0.18);
+                this.playTone(1567.98, 'triangle', 0.38, 0.11, 0.22);
+            }
+            wrong() {
+                // Low buzz error sound
+                this.playTone(260, 'sawtooth', 0.16, 0, 0.2);
+                this.playTone(220, 'sawtooth', 0.28, 0.12, 0.22);
+            }
+            pop() {
+                this.playTone(650, 'sine', 0.05, 0, 0.08);
+            }
+            cheer() {
+                [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => {
+                    this.playTone(f, 'sine', 0.35, i * 0.09, 0.2);
+                });
+            }
+        }
+        const sfx = new DuoSoundEngine();
+
+        /* State Variables */
+        let currentStage = 'learn'; // 'learn' | 'transition' | 'practice' | 'summary'
+        let learnWordIndex = 0; // 0 to 9
+        let challengeIndex = 0; // 0 to 19 (20 questions)
+        let hearts = 5;
+        let xp = 0;
+        let hasChecked = false;
+
+        // Challenge inputs
+        let currentFillSelected = null;
+        let currentReorderBuilt = [];
+        let currentSpellingInput = "";
+        let currentSpokenTranscript = "";
+        let isRecording = false;
+        let activeRecognition = null;
+
+        // TTS Speech Helper
+        function speak(text, rate = 0.9) {
+            sfx.init();
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = 'en-US';
+                u.rate = rate;
+                const voices = window.speechSynthesis.getVoices();
+                const englishVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha')));
+                if (englishVoice) u.voice = englishVoice;
+                window.speechSynthesis.speak(u);
+            }
+        }
+
+        // Web Speech Recognition Helper
+        function startSpeechRecognition(onResult, onEnd) {
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRec) return null;
+            const rec = new SpeechRec();
+            rec.lang = 'en-US';
+            rec.interimResults = false;
+            rec.maxAlternatives = 3;
+            rec.onresult = (e) => {
+                const transcript = e.results[0][0].transcript;
+                onResult(transcript);
+            };
+            rec.onerror = (err) => {
+                console.warn('Speech Rec error:', err);
+                onEnd();
+            };
+            rec.onend = () => {
+                onEnd();
+            };
+            return rec;
+        }
+
+        function highlightWordInSentence(sentence, targetWord) {
+            const regex = new RegExp(`(${targetWord}[a-z]*)`, 'gi');
+            return sentence.replace(regex, `<span class="text-blue-600 font-black underline decoration-blue-300 decoration-2 underline-offset-2">$1</span>`);
+        }
+    </script>
+
+    <script>
+        /* ==============================================================
+           STAGE 1: VOCABULARY LEARNING PHASE (學習階段)
+           - Shows 10 words in strict sequence.
+           - Large word card with IPA, POS, Meaning.
+           - TWO complete example sentences with audio playback.
+           - Normal (1.0x) & Turtle (0.6x) TTS.
+           - Microphone voice recognition check (+15 XP).
+           ============================================================== */
+        function renderLearnWord(index) {
+            currentStage = 'learn';
+            hasChecked = false;
+            const item = VOCAB_DATA[index];
+
+            // Progress Header
+            document.getElementById('progress-indicator').innerText = `單字 ${index + 1} / 10`;
+            document.getElementById('stage-badge').className = "bg-green-100 text-green-700 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold";
+            document.getElementById('stage-badge').innerText = "📖 第一階段：學習";
+            const progressPct = ((index + 1) / VOCAB_DATA.length) * 100;
+            document.getElementById('progress-bar-fill').style.width = `${progressPct}%`;
+
+            resetFooter();
+            document.getElementById('view-card-btn').classList.add('hidden');
+            
+            const actionBtn = document.getElementById('main-action-btn');
+            actionBtn.innerText = index === 9 ? "完成所有學習，進入挑戰階段！" : "下一個單字 (Next Word)";
+            actionBtn.disabled = false;
+
+            const card = document.getElementById('main-content-card');
+            card.innerHTML = `
+                <div class="flex flex-col items-center max-w-xl mx-auto">
+                    <!-- Duo Mascot Encouragement -->
+                    <div class="flex items-center gap-3 w-full mb-3">
+                        <div class="mascot-bounce w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 bg-green-500 rounded-2xl p-2 shadow-md flex items-center justify-center text-white">
+                            <svg class="w-full h-full fill-current" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" fill="#58cc02"/>
+                                <circle cx="8.5" cy="10" r="3.5" fill="#ffffff"/>
+                                <circle cx="15.5" cy="10" r="3.5" fill="#ffffff"/>
+                                <circle cx="9" cy="10" r="1.5" fill="#4b4b4b"/>
+                                <circle cx="15" cy="10" r="1.5" fill="#4b4b4b"/>
+                                <path d="M12 13.5L10 16h4z" fill="#ff9600"/>
+                                <path d="M7 3C5 5 4 8 4 8s2-1 4-1" stroke="#46a302" stroke-width="1.5" stroke-linecap="round"/>
+                                <path d="M17 3C19 5 20 8 20 8s-2-1-4-1" stroke="#46a302" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div class="relative bg-white border-2 border-gray-200 rounded-2xl p-3 shadow-sm flex-1">
+                            <div class="absolute -left-2 top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-l-2 border-b-2 border-gray-200 rotate-45"></div>
+                            <p class="text-xs font-black text-green-600 tracking-wide uppercase">PET 核心單字 #${index + 1}</p>
+                            <p class="text-sm font-black text-gray-800">仔細聆聽發音並開口跟讀，掌握兩個例句再前進！</p>
+                        </div>
+                    </div>
+
+                    <!-- Flashcard Main Word View -->
+                    <div class="w-full bg-white border-2 border-gray-200 rounded-3xl p-6 shadow-sm flex flex-col items-center gap-4 text-center">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-blue-100 text-blue-700 text-xs font-black px-2.5 py-1 rounded-lg uppercase tracking-wider">${item.pos}</span>
+                            <span class="text-gray-400 font-mono text-base">${item.ipa}</span>
+                        </div>
+
+                        <h2 class="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight font-fredoka">${item.word}</h2>
+                        <div class="text-xl sm:text-2xl font-black text-gray-700 pb-1">${item.def}</div>
+
+                        <!-- 2-Speed TTS Audio Controls -->
+                        <div class="flex items-center gap-3">
+                            <button id="tts-normal-btn" class="btn-duo btn-blue rounded-2xl py-3 px-5 flex items-center gap-2 font-bold shadow-sm" title="正常語速朗讀">
+                                <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                                <span>正常語速</span>
+                            </button>
+                            <button id="tts-turtle-btn" class="btn-duo btn-white rounded-2xl py-3 px-4 flex items-center gap-2 font-bold text-gray-600 shadow-sm" title="烏龜慢速朗讀 (0.6x)">
+                                <span class="text-xl">🐢</span>
+                                <span class="text-sm">慢速 0.6x</span>
+                            </button>
+                        </div>
+
+                        <!-- Two Cambridge PET Example Sentences -->
+                        <div class="w-full flex flex-col gap-3 mt-2 text-left">
+                            <!-- Example 1 -->
+                            <div class="bg-slate-50 border-2 border-slate-200/80 rounded-2xl p-4 flex flex-col gap-1.5 relative group">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-black text-blue-600 uppercase tracking-wider">實用例句 ①</span>
+                                    <button onclick="speak('${item.sentence1.replace(/'/g, "\\'")}', 0.85)" class="text-blue-500 hover:text-blue-700 p-1 rounded-lg" title="朗讀例句 1">
+                                        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                                    </button>
+                                </div>
+                                <p class="text-base font-bold text-gray-800 leading-snug">
+                                    ${highlightWordInSentence(item.sentence1, item.word)}
+                                </p>
+                                <p class="text-sm text-gray-500 font-semibold">${item.sentence1Zh}</p>
+                            </div>
+
+                            <!-- Example 2 -->
+                            <div class="bg-slate-50 border-2 border-slate-200/80 rounded-2xl p-4 flex flex-col gap-1.5 relative group">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-black text-indigo-600 uppercase tracking-wider">實用例句 ②</span>
+                                    <button onclick="speak('${item.sentence2.replace(/'/g, "\\'")}', 0.85)" class="text-blue-500 hover:text-blue-700 p-1 rounded-lg" title="朗讀例句 2">
+                                        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                                    </button>
+                                </div>
+                                <p class="text-base font-bold text-gray-800 leading-snug">
+                                    ${highlightWordInSentence(item.sentence2, item.word)}
+                                </p>
+                                <p class="text-sm text-gray-500 font-semibold">${item.sentence2Zh}</p>
+                            </div>
+                        </div>
+
+                        <!-- Speech Recognition Practice Mic Button -->
+                        <div class="w-full flex flex-col items-center gap-2 pt-3 border-t border-gray-100">
+                            <p class="text-xs font-extrabold text-gray-400">點擊麥克風開口說，檢驗發音精準度：</p>
+                            <button id="learn-mic-btn" class="btn-duo btn-white rounded-full p-4 border-2 border-gray-200 text-gray-600 hover:text-blue-500 shadow-sm transition-all">
+                                <svg class="w-7 h-7 fill-current" viewBox="0 0 24 24">
+                                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/>
+                                </svg>
+                            </button>
+                            <div id="learn-mic-status" class="text-sm font-bold min-h-[22px] text-gray-500 transition-all">點擊麥克風念出：「${item.word}」</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Attach Audio events
+            document.getElementById('tts-normal-btn').onclick = () => {
+                sfx.pop();
+                speak(item.word, 0.9);
+            };
+            document.getElementById('tts-turtle-btn').onclick = () => {
+                sfx.pop();
+                speak(item.word, 0.6);
+            };
+
+            // Speech Recognition Wiring
+            const micBtn = document.getElementById('learn-mic-btn');
+            const micStatus = document.getElementById('learn-mic-status');
+
+            micBtn.onclick = () => {
+                if (isRecording) {
+                    if (activeRecognition) activeRecognition.stop();
+                    return;
+                }
+
+                sfx.init();
+                micStatus.innerText = `聆聽中... 請唸出單字：「${item.word}」`;
+                micStatus.className = "text-sm font-bold text-blue-500 animate-pulse";
+                micBtn.classList.add('mic-active');
+                isRecording = true;
+
+                activeRecognition = startSpeechRecognition(
+                    (spoken) => {
+                        isRecording = false;
+                        micBtn.classList.remove('mic-active');
+                        const cleanSpoken = spoken.toLowerCase().trim();
+                        const target = item.word.toLowerCase().trim();
+
+                        if (cleanSpoken.includes(target) || target.includes(cleanSpoken)) {
+                            sfx.correct();
+                            micStatus.innerText = `辨識成功: "${spoken}" (發音精準！+15 XP)`;
+                            micStatus.className = "text-sm font-extrabold text-green-600";
+                            addXP(15);
+                        } else {
+                            sfx.wrong();
+                            micStatus.innerText = `辨識為: "${spoken}"，請再大聲嘗試一次！`;
+                            micStatus.className = "text-sm font-bold text-amber-600";
+                        }
+                    },
+                    () => {
+                        isRecording = false;
+                        micBtn.classList.remove('mic-active');
+                    }
+                );
+
+                if (!activeRecognition) {
+                    setTimeout(() => {
+                        sfx.correct();
+                        micBtn.classList.remove('mic-active');
+                        isRecording = false;
+                        micStatus.innerText = `辨識成功 (模擬測試合格！+15 XP)`;
+                        micStatus.className = "text-sm font-extrabold text-green-600";
+                        addXP(15);
+                    }, 1200);
+                } else {
+                    try {
+                        activeRecognition.start();
+                    } catch(e) {
+                        isRecording = false;
+                        micBtn.classList.remove('mic-active');
+                    }
+                }
+            };
+
+            setTimeout(() => speak(item.word, 0.9), 350);
+        }
+
+        /* Transition Screen between Stage 1 and Stage 2 */
+        function renderTransitionScreen() {
+            currentStage = 'transition';
+            sfx.cheer();
+            confetti({
+                particleCount: 80,
+                spread: 60,
+                origin: { y: 0.6 }
+            });
+
+            document.getElementById('stage-badge').className = "bg-purple-100 text-purple-700 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold";
+            document.getElementById('stage-badge').innerText = "🎯 準備進入第二階段";
+            document.getElementById('progress-indicator').innerText = "10 / 10 學習完成";
+            document.getElementById('progress-bar-fill').style.width = "100%";
+
+            resetFooter();
+            document.getElementById('view-card-btn').classList.add('hidden');
+            const actionBtn = document.getElementById('main-action-btn');
+            actionBtn.innerText = "開始 20 題挑戰練習 (Start Practice)";
+            actionBtn.disabled = false;
+
+            const card = document.getElementById('main-content-card');
+            card.innerHTML = `
+                <div class="max-w-xl mx-auto flex flex-col items-center text-center gap-6 py-6">
+                    <div class="w-24 h-24 bg-green-100 text-green-600 rounded-3xl flex items-center justify-center text-5xl shadow-md border-2 border-green-200">
+                        🏆
+                    </div>
+                    <div>
+                        <h2 class="text-3xl sm:text-4xl font-black text-gray-900 font-fredoka">恭喜完成 10 個單字學習！</h2>
+                        <p class="text-base text-gray-600 font-bold mt-2">
+                            你已經完整聆聽、朗讀並掌握了 10 個核心 PET 字彙與 20 句情境例句。<br>
+                            接下來將進入 <span class="text-amber-600 font-extrabold">第二階段練習挑戰（共 20 題混搭題）</span>！
+                        </p>
+                    </div>
+
+                    <div class="bg-amber-50 border-2 border-amber-200 rounded-3xl p-5 text-left w-full flex flex-col gap-2">
+                        <span class="text-xs font-black text-amber-600 uppercase tracking-wider">🎯 第二階段挑戰功能特色：</span>
+                        <ul class="text-sm font-bold text-gray-700 space-y-1.5 list-disc list-inside">
+                            <li><span class="text-blue-600 font-bold">聽音拼出單字</span>：字數空格方格提示，聽懂拼對！</li>
+                            <li><span class="text-indigo-600 font-bold">單字填空 (Fill-in)</span>：依 PET 真實情境句意選字。</li>
+                            <li><span class="text-emerald-600 font-bold">單字卡重組句子</span>：多鄰國經典字卡拼湊完整語序。</li>
+                            <li><span class="text-rose-600 font-bold">口說指定片語 (Speak Out)</span>：開口讀出標準英文字句。</li>
+                            <li><span class="text-purple-600 font-bold">📖 隨時查看學習卡</span>：忘記單字隨時點擊查看，複習後一鍵返回！</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+
+    <script>
+        /* ==============================================================
+           STAGE 2: PRACTICE CHALLENGE PHASE (練習挑戰階段 - 20 題)
+           - 4 Question Types Mixed across 20 questions:
+             1. 聽音拼出單字 (Listen & Spell) with Letter Slots
+             2. 單字填空 (Fill-in)
+             3. 單字卡重組句子 (Sentence Reordering)
+             4. 口說指定片語 (Speak Out)
+           - Includes "📖 查看單字學習卡" & "🔙 返回繼續挑戰" Modal.
+           ============================================================== */
+        function renderPracticeChallenge(idx) {
+            currentStage = 'practice';
+            hasChecked = false;
+            currentFillSelected = null;
+            currentReorderBuilt = [];
+            currentSpellingInput = "";
+            currentSpokenTranscript = "";
+
+            const challenge = CHALLENGES_DATA[idx];
+            const currentVocab = VOCAB_DATA.find(v => v.id === challenge.vocabId);
+
+            // Update Progress Header
+            document.getElementById('progress-indicator').innerText = `挑戰 ${idx + 1} / 20`;
+            document.getElementById('stage-badge').className = "bg-amber-100 text-amber-700 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold";
+            document.getElementById('stage-badge').innerText = "⚡ 第二階段：挑戰練習";
+            const progressPct = ((idx + 1) / CHALLENGES_DATA.length) * 100;
+            document.getElementById('progress-bar-fill').style.width = `${progressPct}%`;
+
+            resetFooter();
+            document.getElementById('view-card-btn').classList.remove('hidden');
+
+            const actionBtn = document.getElementById('main-action-btn');
+            actionBtn.innerText = "檢查答案 (Check)";
+            actionBtn.disabled = true;
+
+            const card = document.getElementById('main-content-card');
+
+            switch (challenge.type) {
+                case 'spelling':
+                    renderListenSpellExercise(card, challenge, currentVocab);
+                    break;
+                case 'fill':
+                    renderFillInExercise(card, challenge, currentVocab);
+                    break;
+                case 'reorder':
+                    renderSentenceReorderExercise(card, challenge, currentVocab);
+                    break;
+                case 'speak':
+                    renderSpeakOutExercise(card, challenge, currentVocab);
+                    break;
+            }
+        }
+
+        /* 1. 聽音拼出單字 (Listen & Spell) */
+        function renderListenSpellExercise(container, challenge, vocab) {
+            const wordLength = challenge.target.length;
+            currentSpellingInput = "";
+
+            container.innerHTML = `
+                <div class="max-w-xl mx-auto flex flex-col gap-5 text-center">
+                    <div>
+                        <h3 class="text-2xl sm:text-3xl font-extrabold text-gray-900 font-fredoka">聽音拼出單字</h3>
+                        <p class="text-sm font-bold text-gray-500 mt-1">請聆聽發音，依據字數空格拼出正確單字</p>
+                    </div>
+
+                    <!-- Audio Buttons -->
+                    <div class="flex justify-center items-center gap-3">
+                        <button id="spell-audio-normal" class="btn-duo btn-blue rounded-3xl p-5 shadow-md flex items-center justify-center text-white" title="正常語速朗讀">
+                            <svg class="w-10 h-10 fill-current" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                        </button>
+                        <button id="spell-audio-turtle" class="btn-duo btn-white rounded-3xl p-5 shadow-sm text-gray-600 flex items-center justify-center text-2xl" title="慢速朗讀 (0.6x)">
+                            🐢
+                        </button>
+                    </div>
+
+                    <!-- Hint / Meaning Badge & Length indicator -->
+                    <div class="flex items-center justify-center gap-2 flex-wrap">
+                        <span class="text-sm font-extrabold text-blue-700 bg-blue-50 border border-blue-200 rounded-xl py-1.5 px-3">
+                            中文釋義：${challenge.hintZh}（${vocab.pos}）
+                        </span>
+                        <span class="text-xs font-black text-amber-700 bg-amber-50 border border-amber-200 rounded-xl py-1.5 px-3">
+                            共 ${wordLength} 個字母
+                        </span>
+                    </div>
+
+                    <!-- Visual Character Slot Boxes -->
+                    <div class="w-full flex flex-col items-center gap-4 py-2 cursor-pointer" id="slots-wrapper" onclick="document.getElementById('spelling-input-field').focus()">
+                        <div id="letter-slots-container" class="flex flex-wrap justify-center items-center gap-2 max-w-lg">
+                            ${Array.from({ length: wordLength }).map((_, idx) => `
+                                <div class="letter-slot ${idx === 0 ? 'active-cursor' : ''}" data-slot-index="${idx}">
+                                    &nbsp;
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Focused Input for Cross-Platform Keyboard Support -->
+                    <div class="w-full flex justify-center">
+                        <input id="spelling-input-field" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"
+                            maxlength="${wordLength}"
+                            placeholder="在此輸入字母..." 
+                            class="w-full max-w-md text-center text-xl font-bold tracking-widest py-3 px-5 rounded-2xl border-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-all shadow-inner bg-white text-gray-800"
+                        />
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('spell-audio-normal').onclick = () => {
+                sfx.pop();
+                speak(challenge.target, 0.9);
+            };
+            document.getElementById('spell-audio-turtle').onclick = () => {
+                sfx.pop();
+                speak(challenge.target, 0.6);
+            };
+
+            const inputField = document.getElementById('spelling-input-field');
+            const slotElements = container.querySelectorAll('.letter-slot');
+
+            function updateSlots(val) {
+                const upperVal = val.toUpperCase();
+                slotElements.forEach((slot, i) => {
+                    const char = upperVal[i] || '';
+                    slot.innerText = char || '';
+                    if (char) {
+                        slot.classList.add('filled');
+                        slot.classList.remove('active-cursor');
+                    } else {
+                        slot.classList.remove('filled');
+                        if (i === val.length) {
+                            slot.classList.add('active-cursor');
+                        } else {
+                            slot.classList.remove('active-cursor');
+                        }
+                    }
+                });
+            }
+
+            inputField.focus();
+            inputField.oninput = (e) => {
+                const cleaned = e.target.value.replace(/[^a-zA-Z]/g, '').slice(0, wordLength);
+                e.target.value = cleaned;
+                currentSpellingInput = cleaned.trim();
+                updateSlots(currentSpellingInput);
+                document.getElementById('main-action-btn').disabled = currentSpellingInput.length !== wordLength;
+            };
+
+            setTimeout(() => speak(challenge.target, 0.9), 300);
+        }
+
+        /* 2. 單字填空 (Fill-in) */
+        function renderFillInExercise(container, challenge, vocab) {
+            const parts = challenge.question.split("________");
+            const shuffled = [...challenge.options].sort(() => Math.random() - 0.5);
+
+            container.innerHTML = `
+                <div class="max-w-xl mx-auto flex flex-col gap-6">
+                    <div>
+                        <h3 class="text-2xl sm:text-3xl font-extrabold text-gray-900 font-fredoka">單字填空 (Fill-in)</h3>
+                        <p class="text-sm font-bold text-gray-500 mt-1">選出最符合文意與詞性的 PET 單字</p>
+                    </div>
+
+                    <div class="bg-white border-2 border-gray-200 rounded-3xl p-6 shadow-sm flex flex-col gap-3">
+                        <div class="flex items-center gap-2 text-lg sm:text-xl font-black text-gray-800 flex-wrap leading-relaxed">
+                            <span>${parts[0]}</span>
+                            <span id="fill-in-blank" class="min-w-[120px] px-3 py-1 border-b-4 border-blue-400 bg-blue-50/60 text-blue-600 font-black rounded-lg text-center">
+                                ?
+                            </span>
+                            <span>${parts[1] || ''}</span>
+                        </div>
+                        <p class="text-sm font-bold text-gray-400 mt-1">${challenge.translationZh}</p>
+                    </div>
+
+                    <!-- Multiple Choices (4 options) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        ${shuffled.map(opt => `
+                            <button class="fill-option-btn btn-duo btn-white rounded-2xl py-4 px-4 text-center font-extrabold text-lg text-gray-800 tracking-wide" data-val="${opt}">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            const optionBtns = container.querySelectorAll('.fill-option-btn');
+            const blankSpan = document.getElementById('fill-in-blank');
+
+            optionBtns.forEach(btn => {
+                btn.onclick = () => {
+                    sfx.pop();
+                    optionBtns.forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    currentFillSelected = btn.getAttribute('data-val');
+                    blankSpan.innerText = currentFillSelected;
+                    blankSpan.classList.add('bg-blue-100');
+                    document.getElementById('main-action-btn').disabled = false;
+                };
+            });
+        }
+
+        /* 3. 單字卡重組句子 (Sentence Reordering) */
+        function renderSentenceReorderExercise(container, challenge, vocab) {
+            let availableChips = [...challenge.chips].sort(() => Math.random() - 0.5);
+
+            container.innerHTML = `
+                <div class="max-w-xl mx-auto flex flex-col gap-6">
+                    <div>
+                        <h3 class="text-2xl sm:text-3xl font-extrabold text-gray-900 font-fredoka">重組句子 (Sentence Reordering)</h3>
+                        <p class="text-sm font-bold text-gray-500 mt-1">點擊下方字卡，拼出正確的英語語序：</p>
+                    </div>
+
+                    <div class="text-base font-bold text-gray-700 bg-blue-50/80 border border-blue-100 px-4 py-3 rounded-2xl flex items-center justify-between">
+                        <span>中文句意：${challenge.translationZh}</span>
+                        <button onclick="speak('${challenge.target.replace(/'/g, "\\'")}', 0.85)" class="text-blue-500 hover:text-blue-600 p-1" title="聽句子">
+                            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- Selected Target Area -->
+                    <div id="reorder-target-box" class="min-h-[80px] bg-white border-2 border-dashed border-gray-300 rounded-3xl p-3 flex flex-wrap items-center gap-2 transition-all">
+                        <span id="reorder-placeholder" class="text-sm font-bold text-gray-400 pl-3">點選下方單字卡放入此處...</span>
+                    </div>
+
+                    <!-- Available Word Chips Bank -->
+                    <div id="reorder-bank" class="flex flex-wrap justify-center gap-2.5 p-2 min-h-[90px]"></div>
+                </div>
+            `;
+
+            const targetBox = document.getElementById('reorder-target-box');
+            const bankBox = document.getElementById('reorder-bank');
+            const placeholder = document.getElementById('reorder-placeholder');
+
+            function syncChips() {
+                targetBox.innerHTML = '';
+                bankBox.innerHTML = '';
+
+                if (currentReorderBuilt.length === 0) {
+                    targetBox.appendChild(placeholder);
+                } else {
+                    currentReorderBuilt.forEach((word, idx) => {
+                        const chip = document.createElement('button');
+                        chip.className = 'word-bubble bg-blue-50 text-blue-700 border-blue-200';
+                        chip.innerText = word;
+                        chip.onclick = () => {
+                            sfx.pop();
+                            currentReorderBuilt.splice(idx, 1);
+                            availableChips.push(word);
+                            syncChips();
+                        };
+                        targetBox.appendChild(chip);
+                    });
+                }
+
+                availableChips.forEach((word, idx) => {
+                    const chip = document.createElement('button');
+                    chip.className = 'word-bubble text-gray-800';
+                    chip.innerText = word;
+                    chip.onclick = () => {
+                        sfx.pop();
+                        availableChips.splice(idx, 1);
+                        currentReorderBuilt.push(word);
+                        syncChips();
+                    };
+                    bankBox.appendChild(chip);
+                });
+
+                document.getElementById('main-action-btn').disabled = currentReorderBuilt.length === 0;
+            }
+
+            syncChips();
+        }
+
+        /* 4. 口說指定片語 (Speak Out) */
+        function renderSpeakOutExercise(container, challenge, vocab) {
+            container.innerHTML = `
+                <div class="max-w-xl mx-auto flex flex-col items-center gap-6 text-center">
+                    <div>
+                        <h3 class="text-2xl sm:text-3xl font-extrabold text-gray-900 font-fredoka">口說朗讀挑戰 (Speak Out)</h3>
+                        <p class="text-sm font-bold text-gray-500 mt-1">聽聽示範，然後按下麥克風大聲讀出下方文字：</p>
+                    </div>
+
+                    <div class="w-full bg-white border-2 border-gray-200 rounded-3xl p-6 shadow-sm flex flex-col items-center gap-4">
+                        <button onclick="speak('${challenge.target.replace(/'/g, "\\'")}', 0.85)" class="flex items-center gap-2 text-blue-500 font-bold hover:text-blue-600 bg-blue-50 px-4 py-2 rounded-xl border border-blue-100">
+                            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                            <span>聆聽示範發音</span>
+                        </button>
+
+                        <div class="text-2xl sm:text-3xl font-black text-gray-800 tracking-wide font-fredoka py-1">
+                            "${challenge.target}"
+                        </div>
+                        <p class="text-sm font-semibold text-gray-400">中文：${challenge.translationZh}</p>
+
+                        <div class="pt-3 flex flex-col items-center gap-3">
+                            <button id="challenge-mic-btn" class="btn-duo btn-white rounded-full p-6 border-2 border-gray-200 text-gray-700 hover:text-blue-500 shadow-md">
+                                <svg class="w-10 h-10 fill-current" viewBox="0 0 24 24">
+                                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/>
+                                </svg>
+                            </button>
+                            <span id="challenge-mic-status" class="text-sm font-bold text-gray-500">點擊麥克風開始朗讀</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const micBtn = document.getElementById('challenge-mic-btn');
+            const micStatus = document.getElementById('challenge-mic-status');
+
+            micBtn.onclick = () => {
+                if (isRecording) {
+                    if (activeRecognition) activeRecognition.stop();
+                    return;
+                }
+
+                sfx.init();
+                micStatus.innerText = "聆聽中... 請清晰朗讀上方文字！";
+                micStatus.className = "text-sm font-bold text-blue-500 animate-pulse";
+                micBtn.classList.add('mic-active');
+                isRecording = true;
+
+                activeRecognition = startSpeechRecognition(
+                    (spoken) => {
+                        isRecording = false;
+                        micBtn.classList.remove('mic-active');
+                        currentSpokenTranscript = spoken;
+                        micStatus.innerText = `辨識到: "${spoken}"`;
+                        micStatus.className = "text-sm font-bold text-gray-700";
+                        document.getElementById('main-action-btn').disabled = false;
+                    },
+                    () => {
+                        isRecording = false;
+                        micBtn.classList.remove('mic-active');
+                    }
+                );
+
+                if (!activeRecognition) {
+                    setTimeout(() => {
+                        micBtn.classList.remove('mic-active');
+                        isRecording = false;
+                        currentSpokenTranscript = challenge.target;
+                        micStatus.innerText = `模擬辨識完成: "${challenge.target}"`;
+                        micStatus.className = "text-sm font-bold text-green-600";
+                        document.getElementById('main-action-btn').disabled = false;
+                    }, 1400);
+                } else {
+                    try {
+                        activeRecognition.start();
+                    } catch(e) {
+                        isRecording = false;
+                        micBtn.classList.remove('mic-active');
+                    }
+                }
+            };
+        }
+    </script>
+
+    <script>
+        /* Check Answer Logic for Practice Mode */
+        function checkCurrentPractice() {
+            const challenge = CHALLENGES_DATA[challengeIndex];
+            const currentVocab = VOCAB_DATA.find(v => v.id === challenge.vocabId);
+            let isCorrect = false;
+            let explanation = "";
+
+            if (challenge.type === 'spelling') {
+                isCorrect = currentSpellingInput.toLowerCase() === challenge.target.toLowerCase();
+                explanation = `正確拼字為：${challenge.target}（${currentVocab.def}）`;
+            } else if (challenge.type === 'fill') {
+                isCorrect = currentFillSelected === challenge.target;
+                explanation = `正確答案為：${challenge.target}（${challenge.translationZh}）`;
+            } else if (challenge.type === 'reorder') {
+                const builtStr = currentReorderBuilt.join(' ').replace(/[.?]/g, '').toLowerCase().trim();
+                const expectedStr = challenge.target.replace(/[.?]/g, '').toLowerCase().trim();
+                isCorrect = (builtStr === expectedStr);
+                explanation = `正確語序：${challenge.target}`;
+            } else if (challenge.type === 'speak') {
+                const keyword = challenge.matchKeyword.toLowerCase();
+                const spoken = (currentSpokenTranscript || '').toLowerCase();
+                isCorrect = spoken.includes(keyword);
+                explanation = `標準發音為：${challenge.target}`;
+            }
+
+            hasChecked = true;
+            showAnswerFeedback(isCorrect, explanation);
+        }
+
+        function showAnswerFeedback(isCorrect, explanation) {
+            const footer = document.getElementById('footer-section');
+            const banner = document.getElementById('feedback-banner');
+            const icon = document.getElementById('feedback-icon');
+            const title = document.getElementById('feedback-title');
+            const desc = document.getElementById('feedback-desc');
+            const actionBtn = document.getElementById('main-action-btn');
+            const viewCardBtn = document.getElementById('view-card-btn');
+
+            banner.classList.remove('hidden');
+            viewCardBtn.classList.add('hidden');
+            actionBtn.innerText = "下一題 (Next)";
+
+            if (isCorrect) {
+                sfx.correct();
+                addXP(20);
+                footer.className = "w-full bg-[#d7ffb8] border-t-2 border-[#b8f28b] p-4 sticky bottom-0 z-20 transition-colors";
+                icon.className = "w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl text-white bg-[#58cc02]";
+                icon.innerText = "✓";
+                title.innerText = "太棒了！答對了";
+                title.className = "font-fredoka text-xl font-bold text-[#46a302]";
+                desc.innerText = explanation;
+                desc.className = "text-sm font-semibold text-[#46a302]";
+                actionBtn.className = "btn-duo btn-green rounded-2xl font-black text-base tracking-wider uppercase py-3.5 px-8 w-full";
+            } else {
+                sfx.wrong();
+                deductHeart();
+                footer.className = "w-full bg-[#ffdfe0] border-t-2 border-[#ffc1c1] p-4 sticky bottom-0 z-20 transition-colors";
+                icon.className = "w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl text-white bg-[#ff4b4b]";
+                icon.innerText = "✕";
+                title.innerText = "答案不太正確喔！";
+                title.className = "font-fredoka text-xl font-bold text-[#d33131]";
+                desc.innerText = explanation;
+                desc.className = "text-sm font-semibold text-[#d33131]";
+                actionBtn.className = "btn-duo rounded-2xl font-black text-base tracking-wider uppercase py-3.5 px-8 w-full bg-[#ff4b4b] border-b-4 border-[#d33131] text-white";
+            }
+        }
+
+        function resetFooter() {
+            const footer = document.getElementById('footer-section');
+            const banner = document.getElementById('feedback-banner');
+            const actionBtn = document.getElementById('main-action-btn');
+
+            footer.className = "w-full bg-white border-t-2 border-gray-200 p-4 sticky bottom-0 z-20 transition-colors";
+            banner.classList.add('hidden');
+            actionBtn.className = "btn-duo btn-green rounded-2xl font-black text-base tracking-wider uppercase py-3.5 px-8 w-full";
+        }
+
+        function addXP(amount) {
+            xp += amount;
+            document.getElementById('xp-count').innerText = `${xp} XP`;
+        }
+
+        function deductHeart() {
+            hearts = Math.max(0, hearts - 1);
+            document.getElementById('hearts-count').innerText = hearts;
+            if (hearts <= 0) {
+                document.getElementById('energy-modal').classList.remove('hidden');
+            }
+        }
+
+        /* Open/Close Stage 1 Learning Card Modal */
+        function openVocabModal() {
+            sfx.pop();
+            const challenge = CHALLENGES_DATA[challengeIndex];
+            const item = VOCAB_DATA.find(v => v.id === challenge.vocabId);
+            const content = document.getElementById('modal-card-content');
+
+            content.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <span class="bg-purple-100 text-purple-700 text-xs font-black px-2.5 py-1 rounded-lg uppercase">${item.pos}</span>
+                    <span class="text-gray-400 font-mono text-base">${item.ipa}</span>
+                </div>
+                <h3 class="text-3xl font-extrabold text-gray-900 font-fredoka">${item.word}</h3>
+                <div class="text-xl font-black text-gray-700">${item.def}</div>
+
+                <div class="flex items-center gap-3 my-1">
+                    <button onclick="speak('${item.word}', 0.9)" class="btn-duo btn-blue rounded-2xl py-2 px-4 flex items-center gap-1.5 font-bold text-sm">
+                        <span>正常語速</span>
+                    </button>
+                    <button onclick="speak('${item.word}', 0.6)" class="btn-duo btn-white rounded-2xl py-2 px-3 flex items-center gap-1.5 font-bold text-gray-600 text-sm">
+                        <span>🐢 慢速 0.6x</span>
+                    </button>
+                </div>
+
+                <div class="w-full flex flex-col gap-2.5 text-left mt-2">
+                    <div class="bg-gray-50 border border-gray-200 rounded-2xl p-3 flex flex-col gap-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black text-blue-600 uppercase">例句 ①</span>
+                            <button onclick="speak('${item.sentence1.replace(/'/g, "\\'")}', 0.85)" class="text-blue-500 hover:text-blue-700 p-1">
+                                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                            </button>
+                        </div>
+                        <p class="text-sm font-bold text-gray-800 leading-snug">${highlightWordInSentence(item.sentence1, item.word)}</p>
+                        <p class="text-xs text-gray-500 font-semibold">${item.sentence1Zh}</p>
+                    </div>
+
+                    <div class="bg-gray-50 border border-gray-200 rounded-2xl p-3 flex flex-col gap-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black text-indigo-600 uppercase">例句 ②</span>
+                            <button onclick="speak('${item.sentence2.replace(/'/g, "\\'")}', 0.85)" class="text-blue-500 hover:text-blue-700 p-1">
+                                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                            </button>
+                        </div>
+                        <p class="text-sm font-bold text-gray-800 leading-snug">${highlightWordInSentence(item.sentence2, item.word)}</p>
+                        <p class="text-xs text-gray-500 font-semibold">${item.sentence2Zh}</p>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('vocab-modal').classList.remove('hidden');
+        }
+
+        function closeVocabModal() {
+            sfx.pop();
+            document.getElementById('vocab-modal').classList.add('hidden');
+        }
+    </script>
+
+    <script>
+        /* Final Completion Summary Screen */
+        function renderSummaryScreen() {
+            currentStage = 'summary';
+            sfx.cheer();
+            confetti({
+                particleCount: 120,
+                spread: 80,
+                origin: { y: 0.6 }
+            });
+
+            document.getElementById('stage-badge').innerText = "🎉 全數通關！";
+            document.getElementById('progress-indicator').innerText = "20 / 20 挑戰完成";
+            document.getElementById('progress-bar-fill').style.width = '100%';
+
+            resetFooter();
+            document.getElementById('footer-section').classList.add('hidden');
+
+            const card = document.getElementById('main-content-card');
+            card.innerHTML = `
+                <div class="max-w-xl mx-auto flex flex-col items-center text-center gap-6 py-4">
+                    <div class="text-7xl">🎉</div>
+                    <div>
+                        <h2 class="text-3xl sm:text-4xl font-black text-gray-900 font-fredoka">恭喜通關！PET單字特訓-1 大成功</h2>
+                        <p class="text-base text-gray-600 font-bold mt-1">你已成功完成 10 個核心單字的雙階段學習與 20 題混合題型挑戰！</p>
+                    </div>
+
+                    <!-- Stats overview -->
+                    <div class="grid grid-cols-2 gap-4 w-full">
+                        <div class="bg-amber-50 border-2 border-amber-200 rounded-3xl p-5 flex flex-col items-center">
+                            <span class="text-xs font-black uppercase tracking-wider text-amber-600">總累積經驗</span>
+                            <span class="text-3xl font-black text-amber-700 font-fredoka mt-1">${xp} XP</span>
+                        </div>
+                        <div class="bg-green-50 border-2 border-green-200 rounded-3xl p-5 flex flex-col items-center">
+                            <span class="text-xs font-black uppercase tracking-wider text-green-600">剩餘愛心</span>
+                            <span class="text-3xl font-black text-green-700 font-fredoka mt-1">${hearts} / 5</span>
+                        </div>
+                    </div>
+
+                    <!-- 10 Vocabulary Review Cards -->
+                    <div class="w-full bg-white border-2 border-gray-200 rounded-3xl p-5 text-left shadow-sm">
+                        <h4 class="text-xs font-black uppercase text-gray-400 mb-3 tracking-wider">本單元 10 大核心單字總覽</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            ${VOCAB_DATA.map((v, i) => `
+                                <div class="p-3 rounded-2xl bg-gray-50 border border-gray-200/80 flex items-center justify-between">
+                                    <div class="flex flex-col">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="font-black text-base text-gray-800">${i + 1}. ${v.word}</span>
+                                            <span class="text-xs text-blue-600 font-bold">${v.pos}</span>
+                                        </div>
+                                        <span class="text-xs text-gray-500 font-semibold">${v.def}</span>
+                                    </div>
+                                    <button onclick="speak('${v.word}', 0.9)" class="text-gray-400 hover:text-blue-500 p-1.5" title="朗讀">
+                                        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <button id="play-again-btn" class="btn-duo btn-green rounded-2xl py-4 px-10 font-black text-lg tracking-wider uppercase w-full">
+                        再次挑戰複習
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('play-again-btn').onclick = () => {
+                location.reload();
+            };
+        }
+
+        /* Application Initialization and Flow Wiring */
+        function initApp() {
+            // Main Action Button Routing
+            document.getElementById('main-action-btn').onclick = () => {
+                sfx.init();
+
+                if (currentStage === 'learn') {
+                    if (learnWordIndex < VOCAB_DATA.length - 1) {
+                        learnWordIndex++;
+                        renderLearnWord(learnWordIndex);
+                    } else {
+                        renderTransitionScreen();
+                    }
+                } else if (currentStage === 'transition') {
+                    challengeIndex = 0;
+                    renderPracticeChallenge(challengeIndex);
+                } else if (currentStage === 'practice') {
+                    if (!hasChecked) {
+                        checkCurrentPractice();
+                    } else {
+                        challengeIndex++;
+                        if (challengeIndex < CHALLENGES_DATA.length) {
+                            renderPracticeChallenge(challengeIndex);
+                        } else {
+                            renderSummaryScreen();
+                        }
+                    }
+                }
+            };
+
+            // Vocabulary Modal Controls
+            document.getElementById('view-card-btn').onclick = openVocabModal;
+            document.getElementById('close-vocab-modal-btn').onclick = closeVocabModal;
+
+            // Heart refill
+            document.getElementById('refill-hearts-btn').onclick = () => {
+                hearts = 5;
+                document.getElementById('hearts-count').innerText = hearts;
+                document.getElementById('energy-modal').classList.add('hidden');
+            };
+
+            // Start at first word in learning phase
+            renderLearnWord(0);
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
